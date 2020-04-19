@@ -21,10 +21,10 @@
 #if defined(__AVR__)
 const uint8_t dcf77_analog_sample_pin = 5;
 const uint8_t dcf77_sample_pin = A5;       // A5 == d19
-const uint8_t dcf77_inverted_samples = 1;
+const uint8_t dcf77_inverted_samples = 0;
 const uint8_t dcf77_analog_samples = 1;
-// const uint8_t dcf77_pin_mode = INPUT;  // disable internal pull up
-const uint8_t dcf77_pin_mode = INPUT_PULLUP;  // enable internal pull up
+const uint8_t dcf77_pin_mode = INPUT;  // disable internal pull up
+//const uint8_t dcf77_pin_mode = INPUT_PULLUP;  // enable internal pull up
 
 const uint8_t dcf77_monitor_led = 18;  // A4 == d18
 

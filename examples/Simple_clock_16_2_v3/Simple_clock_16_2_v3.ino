@@ -19,13 +19,14 @@
 #include <dcf77.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <ArduinoJson.h>
 
 const uint8_t dcf77_analog_sample_pin = 3;
-const uint8_t dcf77_sample_pin = 17;       // A5 == d19
+const uint8_t dcf77_sample_pin = A3;       // A5 == d19
 const uint8_t dcf77_inverted_samples = 0;
-const uint8_t dcf77_analog_samples = 0;
-const uint8_t dcf77_pin_mode = INPUT;  // disable internal pull up
-//const uint8_t dcf77_pin_mode = INPUT_PULLUP;  // enable internal pull up
+const uint8_t dcf77_analog_samples = 1;
+//const uint8_t dcf77_pin_mode = INPUT;  // disable internal pull up
+const uint8_t dcf77_pin_mode = INPUT_PULLUP;  // enable internal pull up
 
 const uint8_t dcf77_monitor_led = 13;  // A4 == d18
 
@@ -46,6 +47,8 @@ uint8_t sample_input_pin() {
 }
 
 int signalQual        = 0;
+int clockState = 0;
+int counter = 0;
 
 void setup() {
     using namespace Clock;
@@ -58,6 +61,8 @@ void setup() {
 
     lcd.init(); 
     lcd.backlight();
+
+    Serial.begin(9600);
 
     // Wait till clock is synced, depending on the signal quality this may take
     // rather long. About 5 minutes with a good signal, 30 minutes or longer
@@ -115,11 +120,12 @@ void loop() {
 
       
         lcd.setCursor(0,1);
+        
         switch (DCF77_Clock::get_clock_state()) {
-            case Clock::useless: Serial.print(F("useless ")); lcd.print("SU"); break;
-            case Clock::dirty:   Serial.print(F("dirty:  ")); lcd.print("SD"); break;
-            case Clock::synced:  Serial.print(F("synced: ")); lcd.print("SS"); break;
-            case Clock::locked:  Serial.print(F("locked: ")); lcd.print("SL"); break;
+            case Clock::useless: Serial.print(F("useless ")); lcd.print("SU"); clockState = 1; break;
+            case Clock::dirty:   Serial.print(F("dirty:  ")); lcd.print("SD"); clockState = 2; break;
+            case Clock::synced:  Serial.print(F("synced: ")); lcd.print("SS"); clockState = 3; break;
+            case Clock::locked:  Serial.print(F("locked: ")); lcd.print("SL"); clockState = 4; break;
         }
 
         lcd.setCursor(2,1);
@@ -164,6 +170,15 @@ void loop() {
         } else {
           lcd.print(" ");
         }
-        
+
+        if (counter > 10) {
+           StaticJsonBuffer<1000> jsonBuffer;
+           JsonObject& root = jsonBuffer.createObject();
+           root["ClockState"] = clockState;
+           root["SignalQual"] = signalQual;
+           root.printTo(Serial);
+           counter = 0;
+        }
+        counter++;
     }
 }
